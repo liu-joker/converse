@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>jQuery Plugin</title>
+	<style>
+        body {margin: 0;padding: 0;font-family: "Microsoft Yahei";background: #f5f5f5;}
+        .container{width: 1200px;margin: 0 auto;padding-top:40px}
+        .container > .items{position: relative;}
+        .container > .items > .item{width: 232px;position: absolute;box-shadow: 0 1px 3px rgba(0,0,0,0.3);}
+        .container > .items > .item > img{width: 100%;display: block;height: 250px}
+        .container > .items > .item:nth-child(4n) > img{width: 100%;display: block;height: 450px}
+        .container > .items > .item > p{margin: 0;padding:10px;background: #fff;}
+        .container > .btn {
+            width: 280px;
+            height: 40px;
+            margin: 30px auto;
+            text-align: center;
+            line-height: 40px;
+            background-color: #CCC;
+            border-radius: 6px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .container > .loading{
+            background-color: transparent;
+        }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="items"></div>
+		<div class="btn">点击加载图片</div>
+	</div>
+	<script src="./js/jquery.js"></script>
+	<script src="./js/template-web.js"></script>
+	<script src="./js/watefull.js"></script>
+	<script type="template/javascript" id="simple-item">
+	   {{each data}}
+			<div class="item">
+				<img src="{{$value.path}} " style="height:{{$value.height}}">
+				<p>{{$value.text}}</p>
+			</div>
+	   {{/each}}
+	
+	</script>
+	
+
+<script>
+	
+	var page = 1;
+	var pageSize = 10;
+	function render (){
+		$.ajax({
+			dataType:"jsonp",
+			url:"http://10.36.144.155:8888?page="+page+"&pageSize="+pageSize,
+			beforeSend:function(){
+				$(".btn").addClass("loading").html("正在加载中......");
+				if($(".btn").hasClass("loading")){
+					return;
+				}
+			},
+			success:function(res){
+				//把模板编译成纯HTML，
+				$(".btn").removeClass("loading").html("点击加载更多")
+				var html = template("simple-item",{data:res});
+				$(".items").append(html);
+				$(".items").watefull();	
+				if(res.length<pageSize){
+					$(".btn").html("别滑了，到头了。")
+				}		
+			}
+		})
+	}
+	render()
+	$(".btn").on("click",function(){
+		if(!$("btn").hasClass("loading")){
+			page++;
+		render()
+		}
+		
+	})
+	 $(window).on("scroll",function(){
+		 var totalHeight=$(".items").height()+$(".items").offset().top
+		 var juli = totalHeight-$(window).scrollTop()-$(window).height();
+		 if(juli<50&&!$(".btn").hasClass("loading")){
+			 page++
+			 render()
+		 }
+	 })
+</script>
+</body>
+</html>
